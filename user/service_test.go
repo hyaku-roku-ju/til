@@ -1,34 +1,34 @@
 package user
 
 import (
-	"fmt"
 	"context"
-	"time"
+	"fmt"
 	"testing"
+	"time"
 )
 
 type SpyDataSource struct {
-	called bool
-	preferredTime int
+	called        bool
+	preferredTime PreferredTime
 }
 
-func (s *SpyDataSource) Create(ctx context.Context, preferredTime int) (string, error) {
+func (s *SpyDataSource) Create(ctx context.Context, preferredTime PreferredTime) (string, error) {
 	s.called = true
 	s.preferredTime = preferredTime
 	return "1", nil
 }
 
-func (s *SpyDataSource) SetPreferredTime(ctx context.Context, id string, preferredTime int) error {
+func (s *SpyDataSource) SetPreferredTime(ctx context.Context, id string, preferredTime PreferredTime) error {
 	s.called = true
 	s.preferredTime = preferredTime
 	return nil
 }
 
 func TestCreateNewUser(t *testing.T) {
-	var dataSource = &SpyDataSource{ false, 0 }
+	var dataSource = &SpyDataSource{false, PreferredTime{0, 0}}
 
 	ctx := context.Background()
-	entity := UserEntity{ dataSource }
+	entity := UserEntity{dataSource}
 	_, err := entity.CreateNewUser(ctx)
 
 	if err != nil {
@@ -41,7 +41,7 @@ func TestCreateNewUser(t *testing.T) {
 }
 
 func TestCreateNewUserPreferredTime(t *testing.T) {
-	var dataSource = &SpyDataSource{ false, 0 }
+	var dataSource = &SpyDataSource{false, PreferredTime{0, 0}}
 
 	hour := 6
 	min := 15
@@ -55,14 +55,14 @@ func TestCreateNewUserPreferredTime(t *testing.T) {
 	}()
 
 	ctx := context.Background()
-	entity := UserEntity{ dataSource }
+	entity := UserEntity{dataSource}
 	_, err := entity.CreateNewUser(ctx)
 
 	if err != nil {
 		t.Errorf(fmt.Sprintf("Error creating new user"))
 	}
 
-	preferredTime := hour * 60 + min
+	preferredTime := PreferredTime{hour, min}
 
 	if dataSource.preferredTime != preferredTime {
 		t.Errorf(fmt.Sprintf("Error creating user with preferred time %d", dataSource.preferredTime))

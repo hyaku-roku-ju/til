@@ -13,7 +13,7 @@ type UserEntity struct {
 var timeNow = time.Now
 
 func (u UserEntity) CreateNewUser(ctx context.Context) (string, error) {
-	preferredTime := timeNow().UTC().Hour() * 60 + timeNow().UTC().Minute()
+	preferredTime := PreferredTime{hour: timeNow().UTC().Hour(), min: timeNow().UTC().Minute()}
 	id, err := u.dataSource.Create(ctx, preferredTime)
 	return id, err
 }
