@@ -68,3 +68,20 @@ func TestCreateNewUserPreferredTime(t *testing.T) {
 		t.Errorf(fmt.Sprintf("Error creating user with preferred time %d", dataSource.preferredTime))
 	}
 }
+
+func TestSetPreferredTime(t *testing.T) {
+	var dataSource = &SpyDataSource{false, PreferredTime{0, 0}}
+
+	ctx := context.Background()
+	entity := UserEntity{dataSource}
+	preferredTime := PreferredTime{5,30}
+	err := entity.SetPreferredTime(ctx, "1", preferredTime)
+
+	if err != nil {
+		t.Errorf(fmt.Sprintf("Error setting preferred time"))
+	}
+
+	if dataSource.preferredTime != preferredTime {
+		t.Errorf(fmt.Sprintf("Error setting preferred time %d", dataSource.preferredTime))
+	}
+}

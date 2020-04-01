@@ -17,3 +17,8 @@ func (u UserEntity) CreateNewUser(ctx context.Context) (string, error) {
 	id, err := u.dataSource.Create(ctx, preferredTime)
 	return id, err
 }
+
+func (u UserEntity) SetPreferredTime(ctx context.Context, id string, preferredTime PreferredTime) error {
+	err := u.dataSource.SetPreferredTime(ctx, id, preferredTime)
+	return err
+}
