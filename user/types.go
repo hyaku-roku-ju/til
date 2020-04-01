@@ -1,11 +1,11 @@
 package user
 
 type PreferredTime struct {
-	hour int
-	min  int
+	Hour int
+	Min  int
 }
 
 type User struct {
-	id            string
-	preferredTime PreferredTime
+	Id            string
+	PreferredTime PreferredTime
 }
