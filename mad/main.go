@@ -3,7 +3,7 @@ package mad
 import (
 	"context"
 	"fmt"
-
+  "github.com/hyaku-roku-ju/til/user"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -13,13 +13,17 @@ type UserDataSource struct {
   Db *mongo.Database 
 }
 
-func (self *UserDataSource) Create(ctx context.Context, preferredTime int) (string, error) {
+func (self *UserDataSource) Create(ctx context.Context, preferredTime user.PreferredTime) (string, error) {
   collection := self.Db.Collection("users")
   fail := make(chan error)
   success := make(chan string)
   
   go func() {
-    result, err := collection.InsertOne(ctx, bson.M{"preferredTime": preferredTime})
+    result, err := collection.InsertOne(ctx, bson.M{"preferredTime": bson.M{
+      "hour": preferredTime.Hour,
+      "min": preferredTime.Min,
+    }})
+
     if err != nil {
       fail<-err
     }
