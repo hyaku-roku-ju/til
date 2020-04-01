@@ -19,20 +19,21 @@ func (self *UserDataSource) SetPreferredTime(ctx context.Context, id string, pre
 
 	go func() {
 		id, err := primitive.ObjectIDFromHex(id)
+
 		if err != nil {
 			fail <- err
 		}
+
 		_, err = collection.UpdateOne(
 			ctx,
 			bson.M{"_id": id},
-			bson.D{{"$set",	bson.M{"preferredTime": bson.M{
-					"hour": preferredTime.Hour,
-					"min":  preferredTime.Min,
-				}}}},
+			bson.D{{"$set", bson.M{"preferredTime": bson.M{
+				"hour": preferredTime.Hour,
+				"min":  preferredTime.Min,
+			}}}},
 		)
-		if err != nil {
-			fail <- err
-		}
+
+		fail <- err
 	}()
 
 	select {

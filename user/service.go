@@ -12,6 +12,10 @@ type UserEntity struct {
 // Set time.Now outside of method for testing
 var timeNow = time.Now
 
+func NewEntity(dataSource UserDataSource) UserEntity {
+  return UserEntity{dataSource}
+}
+
 func (u UserEntity) CreateNewUser(ctx context.Context) (string, error) {
 	preferredTime := PreferredTime{Hour: timeNow().UTC().Hour(), Min: timeNow().UTC().Minute()}
 	id, err := u.dataSource.Create(ctx, preferredTime)
