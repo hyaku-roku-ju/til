@@ -74,7 +74,7 @@ func TestSetPreferredTime(t *testing.T) {
 
 	ctx := context.Background()
 	entity := UserEntity{dataSource}
-	preferredTime := PreferredTime{5,30}
+	preferredTime := PreferredTime{5, 30}
 	err := entity.SetPreferredTime(ctx, "1", preferredTime)
 
 	if err != nil {
