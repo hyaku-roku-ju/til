@@ -79,13 +79,13 @@ type TgUserDataSource struct {
 	Db *mongo.Database
 }
 
-func (self *TgUserDataSource) Create(ctx context.Context, id string) (string, error) {
+func (self *TgUserDataSource) Create(ctx context.Context, userId string) (string, error) {
 	collection := self.Db.Collection("tgUsers")
 	fail := make(chan error)
 	success := make(chan string)
 
 	go func() {
-		result, err := collection.InsertOne(ctx, bson.M{"userId": id})
+		result, err := collection.InsertOne(ctx, bson.M{"userId": userId})
 
 		if err != nil {
 			fail <- err
