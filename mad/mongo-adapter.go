@@ -74,3 +74,37 @@ func (self *UserDataSource) Create(ctx context.Context, preferredTime user.Prefe
 		return id, nil
 	}
 }
+
+type TgUserDataSource struct {
+	Db *mongo.Database
+}
+
+func (self *TgUserDataSource) Create(ctx context.Context, id string) (string, error) {
+	collection := self.Db.Collection("tgUsers")
+	fail := make(chan error)
+	success := make(chan string)
+
+	go func() {
+		result, err := collection.InsertOne(ctx, bson.M{"userId": id})
+
+		if err != nil {
+			fail <- err
+		}
+
+		objectId, ok := result.InsertedID.(primitive.ObjectID)
+
+		if !ok {
+			fail <- fmt.Errorf("Failed to cast result to ObjectID when creating Telegram user")
+		}
+		success <- objectId.Hex()
+	}()
+
+	select {
+	case <-ctx.Done():
+		return "", ctx.Err()
+	case err := <-fail:
+		return "", err
+	case id := <-success:
+		return id, nil
+	}
+}
