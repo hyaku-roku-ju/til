@@ -12,7 +12,7 @@ type TelegramService struct {
 }
 
 func NewService(repo TelegramRepository) TelegramService {
-  return TelegramService{repo}
+	return TelegramService{repo}
 }
 
 func (t *TelegramService) StoreTelegramId(ctx context.Context, userId string, telegramId string) error {
