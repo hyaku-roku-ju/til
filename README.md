@@ -10,8 +10,6 @@ TIL Bot helps record your daily learnings and helps you to quiz yourself on your
 - Get a summary of your learnings for the week/month
 - Send you cat pics! (not really, but can upon request)
 
-
-# Installation
-
+## Installation
 - clone repository
-- go install
+- run `go install`
