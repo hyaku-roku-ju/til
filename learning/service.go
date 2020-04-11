@@ -9,17 +9,17 @@ type LearningRepository interface {
 }
 
 type LearningService struct {
-  learningRepository LearningRepository 
+  learningRepository LearningRepository
 }
 
 func (self *LearningService) StoreLearning(ctx context.Context, learning Learning) (learningId string, err error) {
   if _, err := learning.IsValid(); err != nil {
     return "", err
   }
- 
+
   fail := make(chan error)
   complete := make(chan string)
-  
+
   go func() {
     id, err := self.learningRepository.StoreLearning(ctx, learning)
     if err != nil {
@@ -27,7 +27,7 @@ func (self *LearningService) StoreLearning(ctx context.Context, learning Learnin
     }
     complete<-id
   }()
-  
+
   select {
     case <-ctx.Done():
       return "", ctx.Err()
@@ -36,4 +36,4 @@ func (self *LearningService) StoreLearning(ctx context.Context, learning Learnin
     case learningId := <-complete:
       return learningId, nil
   }
-} 
+}
