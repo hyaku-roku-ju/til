@@ -3,13 +3,13 @@ package mad
 import (
 	"context"
 	"fmt"
-	"github.com/hyaku-roku-ju/til/user"
+	"github.com/hyaku-roku-ju/til/learning"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type UserDataSource struct {
+type LearningRepository struct {
 	Db *mongo.Database
 }
 

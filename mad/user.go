@@ -9,11 +9,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type UserDataSource struct {
+type UserRepository struct {
 	Db *mongo.Database
 }
 
-func (self *UserDataSource) SetPreferredTime(ctx context.Context, id string, preferredTime user.PreferredTime) error {
+func (self *UserRepository) SetPreferredTime(ctx context.Context, id string, preferredTime user.PreferredTime) error {
 	collection := self.Db.Collection("users")
 	fail := make(chan error)
 
@@ -44,7 +44,7 @@ func (self *UserDataSource) SetPreferredTime(ctx context.Context, id string, pre
 	}
 }
 
-func (self *UserDataSource) Create(ctx context.Context, preferredTime user.PreferredTime) (string, error) {
+func (self *UserRepository) Create(ctx context.Context, preferredTime user.PreferredTime) (string, error) {
 	collection := self.Db.Collection("users")
 	fail := make(chan error)
 	success := make(chan string)
