@@ -81,7 +81,6 @@ func (self *TelegramRepository) Create(ctx context.Context, userId string, teleg
 	go func() {
 		id, err := primitive.ObjectIDFromHex(userId)
 		if err != nil {
-			fmt.Println("Unable to convert id")
 			fail <- err
 		}
 
@@ -108,7 +107,6 @@ func (self *TelegramRepository) GetIdByUserId(ctx context.Context, userId string
 
 		id, err := primitive.ObjectIDFromHex(userId)
 		if err != nil {
-			fmt.Println("Unable to convert id")
 			fail <- err
 		}
 
@@ -119,7 +117,6 @@ func (self *TelegramRepository) GetIdByUserId(ctx context.Context, userId string
 		opts := options.FindOne().SetProjection(projection)
 		err = collection.FindOne(ctx, bson.M{"userId": id}, opts).Decode(&result)
 		if err != nil {
-			fmt.Println("unable to find my id")
 			fail <- err
 		}
 
