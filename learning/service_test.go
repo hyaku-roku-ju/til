@@ -16,6 +16,10 @@ func (self *LearningRepositoryStub) StoreLearning(ctx context.Context, learning 
   return self.learning.Id, nil
 }
 
+func (self *LearningRepositoryStub) GetRandomLearning(ctx context.Context, reporterId string) (Learning, error) {
+  return Learning{}, nil
+}
+
 func TestLearningService_FailsEarly(t *testing.T) {
   repositoryStub := LearningRepositoryStub{false, Learning{}}
   ls := NewService(&repositoryStub)
