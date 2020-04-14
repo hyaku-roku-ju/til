@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
@@ -78,7 +79,13 @@ func (self *TelegramRepository) Create(ctx context.Context, userId string, teleg
 	fail := make(chan error)
 
 	go func() {
-		_, err := collection.InsertOne(ctx, bson.M{"userId": userId, "telegramId": telegramId})
+		id, err := primitive.ObjectIDFromHex(userId)
+		if err != nil {
+			fmt.Println("Unable to convert id")
+			fail <- err
+		}
+
+		_, err = collection.InsertOne(ctx, bson.M{"userId": id, "telegramId": telegramId})
 
 		fail <- err
 	}()
@@ -98,8 +105,21 @@ func (self *TelegramRepository) GetIdByUserId(ctx context.Context, userId string
 
 	go func() {
 		var result bson.M
-		err := collection.FindOne(ctx, bson.M{"userId": userId}).Decode(&result)
+
+		id, err := primitive.ObjectIDFromHex(userId)
 		if err != nil {
+			fmt.Println("Unable to convert id")
+			fail <- err
+		}
+
+		type fields struct {
+			TelegramId int `bson:"telegramId"`
+		}
+		projection := fields{TelegramId: 1}
+		opts := options.FindOne().SetProjection(projection)
+		err = collection.FindOne(ctx, bson.M{"userId": id}, opts).Decode(&result)
+		if err != nil {
+			fmt.Println("unable to find my id")
 			fail <- err
 		}
 
