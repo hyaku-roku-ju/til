@@ -13,13 +13,19 @@ type TelegramRepository struct {
 	Db *mongo.Database
 }
 
-var indexesOpts = []mongo.IndexModel{
-	{Keys: bson.M{"telegramId": 1}, Options: options.Index().SetUnique(true)},
-	{Keys: bson.M{"userId": 1}, Options: options.Index().SetUnique(true)},
+type TelegramIndex struct {
+	name      string
+	isUnique  bool
+	direction int
 }
 
-// Get the Telegram collection and create indexes if they have not yet been
-func CreateCollection(ctx context.Context, db *mongo.Database) TelegramRepository {
+var telegramIndexes = []TelegramIndex{
+	{name: "telegramId", isUnique: true, direction: 1},
+	{name: "userId", isUnique: true, direction: 1},
+}
+
+// Get the Telegram collection and create indexes if they have not yet been created
+func NewTelegramRepository(ctx context.Context, db *mongo.Database) TelegramRepository {
 	col := db.Collection("telegram")
 
 	opts := options.ListIndexes()
@@ -33,15 +39,33 @@ func CreateCollection(ctx context.Context, db *mongo.Database) TelegramRepositor
 		log.Fatal(err)
 	}
 
-	// Assume that 1 index would be _id
-	if len(indexes) <= 1 {
-		// Set all the indexes that are unique
-		for _, opts := range indexesOpts {
+	// create a map for easy look up
+	indexMap := make(map[string]bool)
+	for _, indexBson := range indexes {
+		var indexName string
+		for key, value := range indexBson {
+			name, isString := value.(string)
+			if key == "name" && isString {
+				indexName = name
+			}
+		}
+
+		indexMap[indexName] = true
+	}
+
+	// map through the telegramIndexes to check if the index has been created or not
+	for _, tIndex := range telegramIndexes {
+		// assume the index hasn't been created if not in the indexMap
+		if _, ok := indexMap[tIndex.name]; !ok {
+			// create mongo index options
+			opts := mongo.IndexModel{
+				Keys:    bson.M{tIndex.name: tIndex.direction},
+				Options: options.Index().SetUnique(tIndex.isUnique).SetName(tIndex.name),
+			}
 			_, err := col.Indexes().CreateOne(ctx, opts)
 
 			if err != nil {
-				// Is this a fatal error?
-				log.Fatal(err)
+				log.Fatal("Unable to create telegram index", err)
 			}
 		}
 	}
