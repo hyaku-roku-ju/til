@@ -13,8 +13,8 @@ type LearningService struct {
   learningRepository LearningRepository
 }
 
-func NewService(repo LearningRepository) LearningService {
-  return LearningService{repo}
+func NewService(learningRepository LearningRepository) LearningService {
+  return LearningService{learningRepository}
 }
 
 func (self *LearningService) GetRandomLearning(ctx context.Context, reporterId string) (Learning, error) {

@@ -6,24 +6,24 @@ import (
 )
 
 type UserEntity struct {
-	repository UserRepository
+	userRepository UserRepository
 }
 
 // Set time.Now outside of method for testing
 var timeNow = time.Now
 
-func NewEntity(repository UserRepository) UserEntity {
-  return UserEntity{repository}
+func NewEntity(userRepository UserRepository) UserEntity {
+  return UserEntity{userRepository}
 }
 
 func (u UserEntity) CreateNewUser(ctx context.Context) (string, error) {
 	now := timeNow().UTC()
 	preferredTime := PreferredTime{Hour: now.Hour(), Min: now.Minute()}
-	id, err := u.repository.Create(ctx, preferredTime)
+	id, err := u.userRepository.Create(ctx, preferredTime)
 	return id, err
 }
 
 func (u UserEntity) SetPreferredTime(ctx context.Context, id string, preferredTime PreferredTime) error {
-	err := u.repository.SetPreferredTime(ctx, id, preferredTime)
+	err := u.userRepository.SetPreferredTime(ctx, id, preferredTime)
 	return err
 }
