@@ -12,6 +12,10 @@ type LearningService struct {
   learningRepository LearningRepository
 }
 
+func NewService(repo LearningRepository) LearningService {
+  return LearningService{repo}
+}
+
 func (self *LearningService) StoreLearning(ctx context.Context, learning Learning) (learningId string, err error) {
   if _, err := learning.IsValid(); err != nil {
     return "", err

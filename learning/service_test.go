@@ -13,12 +13,12 @@ type LearningRepositoryStub struct {
 func (self *LearningRepositoryStub) StoreLearning(ctx context.Context, learning Learning)(string, error) {
   self.called = true
   self.learning = learning
-  return "someLearningId", nil
+  return self.learning.Id, nil
 }
 
 func TestLearningService_FailsEarly(t *testing.T) {
-  repositoryStub := LearningRepositoryStub{false, Learning{}}  
-  ls := LearningService{&repositoryStub}
+  repositoryStub := LearningRepositoryStub{false, Learning{}}
+  ls := NewService(&repositoryStub)
   invalidLearning := Learning{}
   id, err := ls.StoreLearning(context.Background(), invalidLearning)
   if len(id) > 0 || err == nil {
@@ -31,9 +31,12 @@ func TestLearningService_FailsEarly(t *testing.T) {
 }
 
 func TestLearningService_ReturnsUnderlyingId(t *testing.T) {
-  repositoryStub := LearningRepositoryStub{false, Learning{}}  
+  repositoryStub := LearningRepositoryStub{false, Learning{}}
   ls := LearningService{&repositoryStub}
+  learningId := "someLearningId"
+
   learning := Learning{
+    Id: learningId,
     Description: "SomeDescription",
     Topics: []string{"lol", "kek"},
     ReporterId: "SomeReporterId",
@@ -44,7 +47,7 @@ func TestLearningService_ReturnsUnderlyingId(t *testing.T) {
   if err != nil {
     t.Errorf("Expected storing valid learning to yield learning id, got %v", err)
   }
-  if id != "someLearningId" {
+  if id != learningId {
     t.Errorf("Expected new learning id to be 'someLearningId' got %s", id)
   }
 }
