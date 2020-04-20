@@ -27,7 +27,7 @@ func (self *UserRepository) SetPreferredTime(ctx context.Context, id string, pre
 		_, err = collection.UpdateOne(
 			ctx,
 			bson.M{"_id": id},
-			bson.D{{"$set", bson.M{"preferredTime": bson.M{
+			bson.D{{Key: "$set", Value: bson.M{"preferredTime": bson.M{
 				"hour": preferredTime.Hour,
 				"min":  preferredTime.Min,
 			}}}},

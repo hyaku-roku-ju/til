@@ -3,23 +3,99 @@ package mad
 import (
 	"context"
 	"fmt"
+
 	"github.com/hyaku-roku-ju/til/learning"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type LearningRepository struct {
 	Db *mongo.Database
 }
 
-func (self *UserDataSource) SetPreferredTime(ctx context.Context, id string, preferredTime user.PreferredTime) error {
-	collection := self.Db.Collection("users")
+func (self *LearningRepository) GetConfirmedLearning(ctx context.Context, reporterId string, skip int) (learning.Learning, error) {
+	collection := self.Db.Collection("learnings")
+	fail := make(chan error)
+	success := make(chan learning.Learning)
+
+	go func() {
+		reporterId, err := primitive.ObjectIDFromHex(reporterId)
+		if err != nil {
+			fail <- err
+		}
+		opts := options.FindOne()
+		// first learning would be {skip: 0},
+		opts.SetSkip(int64(skip))
+		var randomLearning learning.Learning
+		err = collection.FindOne(
+			ctx,
+			bson.D{
+				{Key: "reporterId", Value: reporterId},
+				{Key: "confirmed", Value: true},
+			},
+			opts,
+		).Decode(&randomLearning)
+
+		if err != nil {
+			fail <- err
+		}
+
+		success <- randomLearning
+	}()
+
+	select {
+	case <-ctx.Done():
+		return learning.Learning{}, ctx.Err()
+	case err := <-fail:
+		return learning.Learning{}, err
+	case randomLearning := <-success:
+		return randomLearning, nil
+	}
+}
+
+func (self *LearningRepository) CountConfirmedLearnings(ctx context.Context, reporterId string) (int, error) {
+	collection := self.Db.Collection("learnings")
+	fail := make(chan error)
+	success := make(chan int64)
+
+	go func() {
+		reporterId, err := primitive.ObjectIDFromHex(reporterId)
+		if err != nil {
+			fail <- err
+		}
+
+		count, err := collection.CountDocuments(ctx, bson.D{
+			{Key: "reporterId", Value: reporterId},
+			{Key: "confirmed", Value: true},
+		})
+
+		if err != nil {
+			fail <- err
+		}
+
+		success <- count
+	}()
+
+	select {
+	case <-ctx.Done():
+		return 0, ctx.Err()
+	case err := <-fail:
+		return 0, err
+	case count := <-success:
+		// if somebody has more than 2^32 learnings
+		// it would overflow on 32bit systems
+		return int(count), nil
+	}
+}
+
+func (self *LearningRepository) ConfirmLearning(ctx context.Context, id string) error {
+	collection := self.Db.Collection("learnings")
 	fail := make(chan error)
 
 	go func() {
 		id, err := primitive.ObjectIDFromHex(id)
-
 		if err != nil {
 			fail <- err
 		}
@@ -27,10 +103,9 @@ func (self *UserDataSource) SetPreferredTime(ctx context.Context, id string, pre
 		_, err = collection.UpdateOne(
 			ctx,
 			bson.M{"_id": id},
-			bson.D{{"$set", bson.M{"preferredTime": bson.M{
-				"hour": preferredTime.Hour,
-				"min":  preferredTime.Min,
-			}}}},
+			bson.D{
+				{Key: "$set", Value: bson.M{"confirmed": true}},
+			},
 		)
 
 		fail <- err
@@ -44,16 +119,28 @@ func (self *UserDataSource) SetPreferredTime(ctx context.Context, id string, pre
 	}
 }
 
-func (self *UserDataSource) Create(ctx context.Context, preferredTime user.PreferredTime) (string, error) {
-	collection := self.Db.Collection("users")
+func (self *LearningRepository) StoreLearning(ctx context.Context, learning learning.Learning) (string, error) {
+	collection := self.Db.Collection("learnings")
 	fail := make(chan error)
 	success := make(chan string)
 
 	go func() {
-		result, err := collection.InsertOne(ctx, bson.M{"preferredTime": bson.M{
-			"hour": preferredTime.Hour,
-			"min":  preferredTime.Min,
-		}})
+		id, err := primitive.ObjectIDFromHex(learning.Id)
+		if err != nil {
+			fail <- err
+		}
+		reporterId, err := primitive.ObjectIDFromHex(learning.ReporterId)
+		if err != nil {
+			fail <- err
+		}
+		learningToInsert := bson.M{
+			"_id":         id,
+			"description": learning.Description,
+			"topics":      learning.Topics,
+			"reporterId":  reporterId,
+			"confirmed":   learning.Confirmed,
+		}
+		result, err := collection.InsertOne(ctx, learningToInsert)
 
 		if err != nil {
 			fail <- err
