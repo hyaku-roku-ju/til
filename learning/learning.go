@@ -6,11 +6,11 @@ import (
 )
 
 type Learning struct {
-  Id          string `bson:"_id"`
-  Description string `bson:"description"`
-  Topics      []string `bson:"topics"`
-  ReporterId  string `bson:"reporterId"`
-  Confirmed   bool `bson:"confirmed"`
+	Id          string   `bson:"_id"`
+	Description string   `bson:"description"`
+	Topics      []string `bson:"topics"`
+	ReporterId  string   `bson:"reporterId"`
+	Confirmed   bool     `bson:"confirmed"`
 }
 
 func getNewId() string {
