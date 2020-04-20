@@ -61,7 +61,7 @@ func NewTelegramRepository(ctx context.Context, db *mongo.Database) TelegramRepo
 			// create mongo index options
 			model := mongo.IndexModel{
 				Keys:    bson.M{tIndex.name: tIndex.direction},
-				Options: options.Index().SetUnique(tIndex.isUnique).SetName(tIndex.name),
+				Options: options.Index().SetUnique(tIndex.isUnique).SetName(tIndex.name).SetBackground(true),
 			}
 			models = append(models, model)
 		}
