@@ -15,6 +15,76 @@ type LearningRepository struct {
 	Db *mongo.Database
 }
 
+type LearningIndex struct {
+  keys []bson.M
+  options options.IndexOptions
+}
+
+var indexes = []LearningIndex{
+  {
+    keys: []bson.M{
+      bson.M{"reporterId": 1},
+      bson.M{"confirmed": 1},
+    },
+    options: *options.Index().SetBackground(true).SetName("reporterId.confirmed"),
+  },
+}
+
+func NewLearningRepository(ctx context.Context, db *mongo.Database) (LearningRepository, error) {
+  collection := db.Collection("learnings")
+  fail := make(chan error)
+
+  go func() {
+    var existingIndexes []bson.M
+    
+    indexView := collection.Indexes()
+    cursor, err := indexView.List(ctx)
+    if err != nil {
+      fail<-err
+    }
+    err = cursor.All(ctx, &existingIndexes)
+    if err != nil {
+      fail<-err
+    }
+    
+    existingIndexSet := make(map[string]bool)
+    for _, indexDocument := range existingIndexes {
+      indexName, ok := indexDocument["name"].(string)
+      if !ok {
+        fail<-fmt.Errorf("Failed to get name field from existing mongo index while creating Learning repository")
+      }
+      existingIndexSet[indexName] = true
+    }
+
+    indexesToCreate := make([]mongo.IndexModel, 0)
+    for _, indexDocument := range indexes {
+      if _, exists := existingIndexSet[*indexDocument.options.Name]; exists {
+          continue
+      }
+      // index does not exist
+      newIndex := mongo.IndexModel{
+        Keys: indexDocument.keys,
+        Options: &indexDocument.options,
+      }
+
+      indexesToCreate = append(indexesToCreate, newIndex)
+    }
+    _, err = indexView.CreateMany(ctx, indexesToCreate)
+    fail <- err
+  }()
+
+  select {
+  case <-ctx.Done():
+    return LearningRepository{}, ctx.Err()
+  case err := <-fail:
+    if err != nil {
+      return LearningRepository{}, err
+    } else {
+      return LearningRepository{Db: db}, nil
+    }
+  }
+}
+
 func (self *LearningRepository) GetConfirmedLearning(ctx context.Context, reporterId string, skip int) (learning.Learning, error) {
 	collection := self.Db.Collection("learnings")
 	fail := make(chan error)
