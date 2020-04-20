@@ -54,20 +54,25 @@ func NewTelegramRepository(ctx context.Context, db *mongo.Database) TelegramRepo
 		indexMap[indexName] = true
 	}
 
-	// map through the telegramIndexes to check if the index has been created or not
+	var models []mongo.IndexModel
 	for _, tIndex := range telegramIndexes {
 		// assume the index hasn't been created if not in the indexMap
 		if _, ok := indexMap[tIndex.name]; !ok {
 			// create mongo index options
-			opts := mongo.IndexModel{
+			model := mongo.IndexModel{
 				Keys:    bson.M{tIndex.name: tIndex.direction},
 				Options: options.Index().SetUnique(tIndex.isUnique).SetName(tIndex.name),
 			}
-			_, err := col.Indexes().CreateOne(ctx, opts)
+			models = append(models, model)
+		}
+	}
 
-			if err != nil {
-				log.Fatal("Unable to create telegram index", err)
-			}
+	if len(models) > 0 {
+		opts := options.CreateIndexes()
+		_, err := col.Indexes().CreateMany(ctx, models, opts)
+
+		if err != nil {
+			log.Fatal("Unable to create telegram indexes", err, len(models))
 		}
 	}
 
