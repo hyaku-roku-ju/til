@@ -4,7 +4,8 @@ import "context"
 
 type TelegramRepository interface {
 	Create(ctx context.Context, userId string, telegramId string) error
-	GetIdByUserId(ctx context.Context, userId string) (string, error)
+	GetTelegramIdByUserId(ctx context.Context, userId string) (string, error)
+	GetUserIdByTelegramId(ctx context.Context, telegramId string) (string, error)
 }
 
 type TelegramService struct {
@@ -20,7 +21,12 @@ func (t *TelegramService) StoreTelegramId(ctx context.Context, userId string, te
 	return err
 }
 
-func (t *TelegramService) GetIdByUserId(ctx context.Context, userId string) (string, error) {
-	id, err := t.Repo.GetIdByUserId(ctx, userId)
+func (t *TelegramService) GetTelegramIdByUserId(ctx context.Context, userId string) (string, error) {
+	id, err := t.Repo.GetTelegramIdByUserId(ctx, userId)
 	return id, err
+}
+
+func (t *TelegramService) GetUserIdByTelegramId(ctx context.Context, telegramId string) (string, error) {
+	userId, err := t.Repo.GetUserIdByTelegramId(ctx, telegramId)
+	return userId, err
 }

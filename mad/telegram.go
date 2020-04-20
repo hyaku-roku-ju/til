@@ -97,7 +97,7 @@ func (self *TelegramRepository) Create(ctx context.Context, userId string, teleg
 	}
 }
 
-func (self *TelegramRepository) GetIdByUserId(ctx context.Context, userId string) (string, error) {
+func (self *TelegramRepository) GetTelegramIdByUserId(ctx context.Context, userId string) (string, error) {
 	collection := self.Db.Collection("telegram")
 	fail := make(chan error)
 	success := make(chan string)
@@ -136,3 +136,38 @@ func (self *TelegramRepository) GetIdByUserId(ctx context.Context, userId string
 		return id, nil
 	}
 }
+
+	func (self *TelegramRepository) GetUserIdByTelegramId(ctx context.Context, telegramId string) (string, error) {
+		collection := self.Db.Collection("telegram")
+		fail := make(chan error)
+		success := make(chan string)
+
+		go func() {
+			var result bson.M
+
+			type fields struct {
+				UserId int `bson:"userId"`
+			}
+			projection := fields{UserId: 1}
+			opts := options.FindOne().SetProjection(projection)
+			err := collection.FindOne(ctx, bson.M{"telegramId": telegramId}, opts).Decode(&result)
+			if err != nil {
+				fail <- err
+			}
+
+			if objectId, ok := result["userId"].(primitive.ObjectID); ok {
+				success <- objectId.Hex()
+			} else {
+				fail <- fmt.Errorf("Failed to cast result to objectId")
+			}
+		}()
+
+		select {
+		case <-ctx.Done():
+			return "", ctx.Err()
+		case err := <- fail:
+			return "", err
+		case id := <- success:
+			return id, nil
+		}
+	}
