@@ -28,7 +28,7 @@ func TestCreateNewUser(t *testing.T) {
 	var dataSource = &SpyDataSource{false, PreferredTime{0, 0}}
 
 	ctx := context.Background()
-	entity := UserEntity{dataSource}
+	entity := UserService{dataSource}
 	_, err := entity.CreateNewUser(ctx)
 
 	if err != nil {
@@ -55,7 +55,7 @@ func TestCreateNewUserPreferredTime(t *testing.T) {
 	}()
 
 	ctx := context.Background()
-	entity := UserEntity{dataSource}
+	entity := UserService{dataSource}
 	_, err := entity.CreateNewUser(ctx)
 
 	if err != nil {
@@ -73,7 +73,7 @@ func TestSetPreferredTime(t *testing.T) {
 	var dataSource = &SpyDataSource{false, PreferredTime{0, 0}}
 
 	ctx := context.Background()
-	entity := UserEntity{dataSource}
+	entity := UserService{dataSource}
 	preferredTime := PreferredTime{5, 30}
 	err := entity.SetPreferredTime(ctx, "1", preferredTime)
 
