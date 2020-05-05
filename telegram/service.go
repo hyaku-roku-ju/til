@@ -8,6 +8,13 @@ type TelegramRepository interface {
 	GetUserIdByTelegramId(ctx context.Context, telegramId string) (string, error)
 }
 
+// Maybe better name? Used as internal dependency of handler, 
+// But it has only one method, such that we won't need to implement everything
+// for telegram handler.
+type TelegramServiceEntrypoint interface {
+  ProcessDecodedMessage(ctx context.Context, update Update) error
+}
+
 type TelegramService struct {
 	Repo TelegramRepository
 }
